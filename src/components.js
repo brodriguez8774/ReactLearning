@@ -1,53 +1,54 @@
 import React from 'react';
 
 class Game extends React.Component {
-    render() {
-        return (
-            <div>
-                <h1>Tic Tac Toe Game</h1>
-                <div className="game">
-                    <div>
-                        <h2>Game Board</h2>
-                        <Board />
-                    </div>
-                    <div className="game-info">
-                        <h2>Game Info</h2>
-                        <div></div>
-                        <div></div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-}
-
-class Board extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            squares: Array(9).fill(null),
+            history: [{
+                squares: Array(9).fill(null),
+            }],
             xIsNext: true,
-        };
+            stepNumber: 0,
+        }
     }
 
-    renderSquare(index) {
-        return <Square
-            value={ this.state.squares[index] }
-            onClick={ () => this.handleClick(index) }
-        />
-    }
-
-    handleClick(index) {
-        const squares = this.state.squares.slice();
-        squares[index] = this.state.xIsNext ? 'X' : 'O';
+     handleClick(i) {
+        const history = this.state.history.slice(0, this.state.stepNumber + 1);
+        const current = history[history.length - 1];
+        const squares = current.squares.slice();
+        if (CalculateWinner(squares) || squares[i]) {
+            return;
+        }
+        squares[i] = this.state.xIsNext ? 'X' : 'O';
         this.setState({
-            squares: squares,
-            xIsNext: !this.state.xIsNext,
+        history: history.concat([{
+            squares: squares
+        }]),
+        xIsNext: !this.state.xIsNext,
+        stepNumber: history.length,
+        });
+    }
+
+    jumpTo(step) {
+        this.setState({
+            stepNumber: step,
+            xIsNext: (step % 2) === 0,
         });
     }
 
     render() {
-        const winner = CalculateWinner( this.state.squares );
+        const history = this.state.history;
+        const current = history[this.state.stepNumber];
+        const winner = CalculateWinner(current.squares);
+
+        const moves = history.map((step, move) => {
+            const description = move ? 'Go to move #' + move : 'Go to game start';
+            return (
+                <li>
+                    <button onClick={ () => this.jumpTo(move) }>{ description }</button>
+                </li>
+            );
+        });
 
         let status;
         if (winner) {
@@ -58,7 +59,37 @@ class Board extends React.Component {
 
         return (
             <div>
-                <div className="status">{ status }</div>
+                <h1>Tic Tac Toe Game</h1>
+                <div className="game">
+                    <div>
+                        <h2>Game Board</h2>
+                        <Board
+                            squares={ current.squares }
+                            onClick={ (index) => this.handleClick(index) }
+                        />
+                    </div>
+                    <div className="game-info">
+                        <h2>Game Info</h2>
+                        <div>{ status }</div>
+                        <div>{ moves }</div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
+class Board extends React.Component {
+    renderSquare(index) {
+        return <Square
+            value={ this.props.squares[index] }
+            onClick={ () => this.props.onClick(index) }
+        />
+    }
+
+    render() {
+        return (
+            <div>
                 <div className="board-row">
                     { this.renderSquare(0) }
                     { this.renderSquare(1) }
