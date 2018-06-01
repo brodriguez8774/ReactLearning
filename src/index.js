@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDom from 'react-dom';
+
 import './index.css';
+import {Game} from './components.js';
 
 ReactDom.render(
-    <h1>Hello world.</h1>,
+    <Game />,
     document.getElementById('root')
 )
